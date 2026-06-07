@@ -7,10 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Build index.xml
-        uses: cfillion/reapack-index@v1
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          name: AikyaLabs Simple ChordTrack
+          ruby-version: '3.0'
+      - name: Install reapack-index
+        run: gem install reapack-index
+      - name: Build index.xml
+        run: reapack-index --name "AikyaLabs Simple ChordTrack"
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
