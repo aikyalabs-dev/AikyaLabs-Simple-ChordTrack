@@ -5,7 +5,7 @@
 --   [main] AikyaLabs Simple ChordTrack.lua
 --   logo_processed.png
 -- @about
---   A highly integrated, Studio One inspired native Chord Track and real-time Display system for REAPER.
+--   A highly integrated, Studio One inspired native Chord Track and real-time Chord Display system for REAPER.
 --   Features a modern flat-design UI using ReaImGui.
 
 local r = reaper
