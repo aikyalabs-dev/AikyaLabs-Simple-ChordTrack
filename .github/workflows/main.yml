@@ -7,17 +7,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
+          
       - name: Install reapack-index
         run: gem install reapack-index
-      - name: Build index.xml
-        run: reapack-index --name "AikyaLabs Simple ChordTrack"
-      - name: Commit changes
+        
+      - name: Configure Git
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -m "Update ReaPack index" -a || exit 0
-          git push
+          
+      - name: Build and Commit index.xml
+        run: reapack-index --name "AikyaLabs Simple ChordTrack" --commit
+        
+      - name: Push changes
+        run: git push
