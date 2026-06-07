@@ -1,0 +1,19 @@
+name: ReaPack-Index
+on:
+  push:
+    branches: [ main, master ]
+jobs:
+  reapack-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build index.xml
+        uses: cfillion/reapack-index@v1
+        with:
+          name: AikyaLabs Simple ChordTrack
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Update ReaPack index" -a || exit 0
+          git push
