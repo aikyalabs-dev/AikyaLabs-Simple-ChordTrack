@@ -13,8 +13,11 @@ jobs:
         with:
           ruby-version: '3.0'
           
-      - name: Install reapack-index
-        run: gem install reapack-index
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+          gem install reapack-index
         
       - name: Configure Git
         run: |
