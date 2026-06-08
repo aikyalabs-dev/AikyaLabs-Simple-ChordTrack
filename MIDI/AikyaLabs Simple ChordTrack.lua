@@ -1,11 +1,11 @@
 -- @description AikyaLabs Simple ChordTrack
 -- @author Aikya Labs
--- @version 1.0.0
+-- @version 1.1.0
 -- @provides
 --   [main] AikyaLabs Simple ChordTrack.lua
 --   logo_processed.png
 -- @about
---   A highly integrated, Studio One inspired native Chord Track and real-time Chord Display system for REAPER.
+--   A highly integrated, Studio One inspired native Chord Track and real-time Display system for REAPER.
 --   Features a modern flat-design UI using ReaImGui.
 
 local r = reaper
@@ -79,6 +79,12 @@ local selected_root_idx = 1
 local selected_quality_idx = 1
 local selected_octave = 3
 
+local user_color_hex = r.GetExtState("AikyaLabs_ChordTrack", "TrackColor")
+local current_track_color = 0xB44C36FF
+if user_color_hex ~= "" then
+    current_track_color = tonumber(user_color_hex)
+end
+
 -- AIKYA LABS BRAND COLORS
 local C_BG_DARK        = 0x1A1C1EFF
 local C_BG_SURFACE     = 0x25282BFF
@@ -116,6 +122,38 @@ local function ToggleButton(label, selected, width)
     return clicked
 end
 
+local function GetNativeColor(imgui_color)
+    return r.ImGui_ColorConvertNative(imgui_color) | 0x1000000
+end
+
+function UpdateAllColors()
+    local native_color = GetNativeColor(current_track_color)
+    
+    local parent_track, child_track = nil, nil
+    for i = 0, r.CountTracks(0) - 1 do
+        local t = r.GetTrack(0, i)
+        local _, name = r.GetSetMediaTrackInfo_String(t, "P_NAME", "", false)
+        if name == "Chord Track" then parent_track = t
+        elseif name == "Chord MIDI (Hidden)" then child_track = t end
+    end
+    
+    if parent_track then
+        r.SetMediaTrackInfo_Value(parent_track, "I_CUSTOMCOLOR", native_color)
+        for i = 0, r.CountTrackMediaItems(parent_track) - 1 do
+            local item = r.GetTrackMediaItem(parent_track, i)
+            r.SetMediaItemInfo_Value(item, "I_CUSTOMCOLOR", native_color)
+        end
+    end
+    if child_track then
+        r.SetMediaTrackInfo_Value(child_track, "I_CUSTOMCOLOR", native_color)
+        for i = 0, r.CountTrackMediaItems(child_track) - 1 do
+            local item = r.GetTrackMediaItem(child_track, i)
+            r.SetMediaItemInfo_Value(item, "I_CUSTOMCOLOR", native_color)
+        end
+    end
+    r.UpdateArrange()
+end
+
 function GetOrCreateChordTracks()
     local parent_track, child_track = nil, nil
     local track_count = r.CountTracks(0)
@@ -125,11 +163,15 @@ function GetOrCreateChordTracks()
         if name == "Chord Track" then parent_track = t
         elseif name == "Chord MIDI (Hidden)" then child_track = t end
     end
+    local is_new = false
+    local native_color = GetNativeColor(current_track_color)
+    
     if not parent_track then
+        is_new = true
         r.InsertTrackAtIndex(0, true)
         parent_track = r.GetTrack(0, 0)
         r.GetSetMediaTrackInfo_String(parent_track, "P_NAME", "Chord Track", true)
-        r.SetMediaTrackInfo_Value(parent_track, "I_CUSTOMCOLOR", r.ColorToNative(26, 75, 79) | 0x1000000)
+        r.SetMediaTrackInfo_Value(parent_track, "I_CUSTOMCOLOR", native_color)
         r.SetMediaTrackInfo_Value(parent_track, "I_FOLDERDEPTH", 1)
     end
     if not child_track then
@@ -137,11 +179,24 @@ function GetOrCreateChordTracks()
         r.InsertTrackAtIndex(parent_idx, true)
         child_track = r.GetTrack(0, parent_idx)
         r.GetSetMediaTrackInfo_String(child_track, "P_NAME", "Chord MIDI (Hidden)", true)
-        r.SetMediaTrackInfo_Value(child_track, "I_CUSTOMCOLOR", r.ColorToNative(37, 40, 43) | 0x1000000)
+        r.SetMediaTrackInfo_Value(child_track, "I_CUSTOMCOLOR", native_color)
         r.SetMediaTrackInfo_Value(child_track, "I_FOLDERDEPTH", -1)
         r.SetMediaTrackInfo_Value(child_track, "B_SHOWINTCP", 0)
         r.SetMediaTrackInfo_Value(child_track, "B_SHOWINMIXER", 0)
     end
+    
+    if is_new then
+        -- Ensure they are at the absolute top
+        r.SetOnlyTrackSelected(parent_track)
+        r.SetTrackSelected(child_track, true)
+        r.ReorderSelectedTracks(0, 0)
+        
+        local user_choice = r.ShowMessageBox("Pin chord track on top?", "AikyaLabs Simple ChordTrack", 4)
+        if user_choice == 6 then -- 6 means Yes in Reaper
+            r.Main_OnCommand(40000, 0) -- Pin to top
+        end
+    end
+    
     return parent_track, child_track
 end
 
@@ -202,7 +257,7 @@ function InsertChord()
         r.DeleteTrackMediaItem(track, item)
     end
     
-    local item_color = r.ColorToNative(180, 76, 54) | 0x1000000
+    local item_color = GetNativeColor(current_track_color)
 
     for _, region in ipairs(target_regions) do
         local pos = region.pos
@@ -514,6 +569,28 @@ function loop()
                     ImGui.EndTabItem(ctx)
                 end
                 
+                -- ==========================================
+                -- SETTINGS TAB
+                -- ==========================================
+                if ImGui.BeginTabItem(ctx, "Settings") then
+                    ImGui.Dummy(ctx, 0, 20)
+                    
+                    ImGui.TextColored(ctx, C_TEXT_SECONDARY, "CHORD TRACK APPEARANCE")
+                    ImGui.Dummy(ctx, 0, 8)
+                    
+                    ImGui.PushStyleVar(ctx, ImGui.StyleVar_FrameRounding, 4)
+                    local flags = ImGui.ColorEditFlags_NoInputs | ImGui.ColorEditFlags_NoSidePreview
+                    local rv, new_color = ImGui.ColorEdit3(ctx, "Track & Item Color", current_track_color, flags)
+                    if rv then
+                        current_track_color = new_color
+                        r.SetExtState("AikyaLabs_ChordTrack", "TrackColor", tostring(new_color), true)
+                        UpdateAllColors()
+                    end
+                    ImGui.PopStyleVar(ctx, 1)
+                    
+                    ImGui.EndTabItem(ctx)
+                end
+                
                 ImGui.EndTabBar(ctx)
             end
         ImGui.EndGroup(ctx)
@@ -528,4 +605,9 @@ function loop()
     if open then r.defer(loop) end
 end
 
-r.defer(loop)
+function init()
+    GetOrCreateChordTracks()
+    loop()
+end
+
+r.defer(init)
