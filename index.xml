@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="AikyaLabs Simple ChordTrack" commit="68aa401bd147a60cfc7c01a4d264b7798cb6f647">
+<index version="1" name="AikyaLabs Simple ChordTrack" commit="9056fb76ff8cb77f7501963c206742b9574eb841">
   <category name="MIDI">
     <reapack name="AikyaLabs Simple ChordTrack.lua" type="script" desc="AikyaLabs Simple ChordTrack">
       <metadata>
@@ -18,6 +18,10 @@
       <version name="1.1.0" author="Aikya Labs" time="2026-06-08T08:29:49Z">
         <source main="main">https://github.com/aikyalabs-dev/AikyaLabs-Simple-ChordTrack/raw/68aa401bd147a60cfc7c01a4d264b7798cb6f647/MIDI/AikyaLabs%20Simple%20ChordTrack.lua</source>
         <source file="logo_processed.png">https://github.com/aikyalabs-dev/AikyaLabs-Simple-ChordTrack/raw/68aa401bd147a60cfc7c01a4d264b7798cb6f647/MIDI/logo_processed.png</source>
+      </version>
+      <version name="1.2.0" author="Aikya Labs" time="2026-06-12T19:16:40Z">
+        <source main="main">https://github.com/aikyalabs-dev/AikyaLabs-Simple-ChordTrack/raw/9056fb76ff8cb77f7501963c206742b9574eb841/MIDI/AikyaLabs%20Simple%20ChordTrack.lua</source>
+        <source file="logo_processed.png">https://github.com/aikyalabs-dev/AikyaLabs-Simple-ChordTrack/raw/9056fb76ff8cb77f7501963c206742b9574eb841/MIDI/logo_processed.png</source>
       </version>
     </reapack>
   </category>
